@@ -4,6 +4,7 @@ const { toJWT } = require("../auth/jwt");
 const authMiddleware = require("../auth/middleware");
 const User = require("../models/").user;
 const Space = require("../models").space;
+const Story = require("../models").story;
 const { SALT_ROUNDS } = require("../config/constants");
 const story = require("../models/story");
 
@@ -21,6 +22,10 @@ router.post("/login", async (req, res, next) => {
     }
 
     const user = await User.findOne({ where: { email } });
+    const space = await Space.findOne({
+      where: { userId: user.id },
+      include: [Story],
+    });
 
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.status(400).send({
@@ -30,7 +35,8 @@ router.post("/login", async (req, res, next) => {
 
     delete user.dataValues["password"]; // don't send back the password hash
     const token = toJWT({ userId: user.id });
-    return res.status(200).send({ token, user: user.dataValues });
+
+    return res.status(200).send({ token, user: user.dataValues, space });
   } catch (error) {
     console.log(error);
     return res.status(400).send({ message: "Something went wrong, sorry" });
@@ -51,13 +57,10 @@ router.post("/signup", async (req, res) => {
       password: bcrypt.hashSync(password, SALT_ROUNDS),
       name,
     });
-    console.log("newUser", newUser);
 
     delete newUser.dataValues["password"]; // don't send back the password hash
 
     const token = toJWT({ userId: newUser.id });
-
-    console.log(token, "this is token");
 
     const title = `${name}'s Space`;
     const description = null;
@@ -89,8 +92,14 @@ router.post("/signup", async (req, res) => {
 // - checking if a token is (still) valid
 router.get("/me", authMiddleware, async (req, res) => {
   // don't send back the password hash
+
+  const space = await Space.findOne({
+    where: { userId: req.user.id },
+    include: [Story],
+    order: [[Story, "createdAt", "DESC"]],
+  });
   delete req.user.dataValues["password"];
-  res.status(200).send({ ...req.user.dataValues });
+  res.status(200).send({ ...req.user.dataValues, space });
 });
 
 module.exports = router;
