@@ -3,12 +3,13 @@ const { Router } = require("express");
 const { toJWT } = require("../auth/jwt");
 const authMiddleware = require("../auth/middleware");
 const User = require("../models/").user;
+const Space = require("../models").space;
 const { SALT_ROUNDS } = require("../config/constants");
+const story = require("../models/story");
 
 const router = new Router();
 
-
-//login 
+//login
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -36,26 +37,42 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-
 //signup
 router.post("/signup", async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password || !name) {
     return res.status(400).send("Please provide an email, password and a name");
   }
-
   try {
+    console.log(email, password, name);
+    console.log("this ");
     const newUser = await User.create({
       email,
       password: bcrypt.hashSync(password, SALT_ROUNDS),
       name,
     });
+    console.log("newUser", newUser);
 
     delete newUser.dataValues["password"]; // don't send back the password hash
 
     const token = toJWT({ userId: newUser.id });
 
-    res.status(201).json({ token, user: newUser.dataValues });
+    console.log(token, "this is token");
+
+    const title = `${name}'s Space`;
+    const description = null;
+    const backgroundColor = "#ffffff";
+    const color = "#000000";
+    const userId = newUser.id;
+    const newSpace = await Space.create({
+      title,
+      description,
+      backgroundColor,
+      color,
+      userId,
+    });
+
+    res.status(201).json({ token, user: newUser.dataValues, newSpace });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
       return res
