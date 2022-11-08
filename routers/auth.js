@@ -50,8 +50,6 @@ router.post("/signup", async (req, res) => {
     return res.status(400).send("Please provide an email, password and a name");
   }
   try {
-    console.log(email, password, name);
-    console.log("this ");
     const newUser = await User.create({
       email,
       password: bcrypt.hashSync(password, SALT_ROUNDS),
