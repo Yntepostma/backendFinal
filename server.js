@@ -10,9 +10,11 @@ const Space = require("./models").space;
 
 const spaceRouter = require("./routers/spaces");
 const authRouter = require("./routers/auth");
+const storyRouter = require("./routers/stories");
 
 app.use("/spaces", spaceRouter);
 app.use("/auth", authRouter);
+app.use("/stories", storyRouter);
 
 const PORT = 4000;
 
