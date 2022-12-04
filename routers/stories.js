@@ -7,7 +7,7 @@ const router = new Router();
 router.post("/", authMiddleware, async (req, res) => {
   const { name, content, imageUrl, spaceId } = req.body;
   const newStory = await Story.create({ name, content, imageUrl, spaceId });
-  res.send("Succes! New story was created");
+  //   res.send("Succes! New story was created");
 });
 
 router.delete("/:id", async (req, res) => {

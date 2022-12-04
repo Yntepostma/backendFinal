@@ -25,6 +25,7 @@ router.post("/login", async (req, res, next) => {
     const space = await Space.findOne({
       where: { userId: user.id },
       include: [Story],
+      order: [[Story, "createdAt", "DESC"]],
     });
 
     if (!user || !bcrypt.compareSync(password, user.password)) {
